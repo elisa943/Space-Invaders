@@ -1,8 +1,8 @@
 import pygame
 import sys
-from random import*
-import math
-import time
+from random import randint
+from math import sqrt
+from time import sleep
 from pygame import mixer
 
 """
@@ -32,6 +32,8 @@ pygame.display.set_icon(icon)
 background = pygame.image.load("images/galaxy.png")
 mixer.music.load("musique/the-edge-of-dawn.mp3")
 mixer.music.play(-1)
+explosion_player = mixer.Sound("musique/explosion-player.wav")
+explosion_ennemi = mixer.Sound("musique/explosion-ennemi.wav")
 
 #Variables
 NOIR = (0, 0, 0)
@@ -52,30 +54,6 @@ myFont_window_taille_2 = pygame.font.SysFont(None, 35)
 myFont_window_taille_3 = pygame.font.SysFont(None, 25)
 myFont_game = pygame.font.SysFont(None, 35)
 
-text_space_invaders = "SPACE INVADERS"
-text_mission = "Mission : éliminer les vaisseaux ennemis !"
-text_rules = "ESPACE : tire des lasers"
-text_rules_2 = "FLECHE GAUCHE : déplace le vaisseau vers la gauche"
-text_rules_3 = "FLECHE DROITE : déplace le vaisseau vers la droite"
-text_start = "APPUYER SUR ENTREE POUR JOUER"
-text_musique = "Chanson : The Edge of Dawn"
-text_nb_lives = "NOMBRE DE VIE :"
-text_name_score = "SCORE :"
-text_win = "BRAVO !"
-text_game_over = "PERDU !"
-
-label_space_invaders = myFont_window_title.render(text_space_invaders, 1, BLANC)
-label_mission = myFont_window_taille_1.render(text_mission, 1, BLANC)
-label_rules = myFont_window_taille_2.render(text_rules,1,BLANC)
-label_rules_2 = myFont_window_taille_2.render(text_rules_2,1,BLANC)
-label_rules_3 = myFont_window_taille_2.render(text_rules_3,1,BLANC)
-label_start = myFont_window_taille_1.render(text_start,1,BLANC)
-label_musique = myFont_window_taille_3.render(text_musique, 1, BLANC)
-label_nb_lives = myFont_game.render(text_nb_lives,1,BLANC)
-label_name_score = myFont_game.render(text_name_score, 1, BLANC)
-label_win = myFont_window_title.render(text_win, 1, BLANC)
-label_game_over = myFont_window_title.render(text_game_over, 1, BLANC)
-
 # Joueur
 player_img = pygame.image.load("images/space-ship.png")
 player_width, player_height = 80, 80
@@ -94,36 +72,46 @@ activation_laser = False
 speed_ennemi = 2
 ennemi_width, ennemi_height = 64, 64
 
-ennemiX, ennemiY = 2, 36
+ennemiX, ennemiY = 2, 36 #Coordonnées de l'ennemi 1
 
 nb_ennemis_x, nb_ennemis_y = 8, 3
-nb_ennemis = nb_ennemis_x*nb_ennemis_y
-ennemi_img = []
-ennemi_x = []
-ennemi_y = []
-ennemis_éliminés = []
+nb_ennemis = nb_ennemis_x * nb_ennemis_y
+ennemi_x, ennemi_y, ennemis_éliminés, ennemi_img = [], [], [], []
+img_ennemi = pygame.image.load("images/enemy.png")
+
 
 #Création des ennemis
 for j in range(nb_ennemis_y):
     for i in range (nb_ennemis_x):
-        ennemi_img.append(pygame.image.load("images/enemy.png"))
+        ennemi_img.append(img_ennemi)
         ennemi_x.append(ennemiX + (i*74))
         ennemi_y.append(ennemiY + (j*69))
 
+""" -- listes compréhension
+for j in range(nb_ennemis_y):
+    ennemi_x = [ennemiX + (i*74) for i in range(nb_ennemis_x)]
+    ennemi_y = [ennemiY + (j+69) for i in range(nb_ennemis_x)]
+    ennemi_img = [img_ennemi for i in range(nb_ennemis_x)]
+        
+///
+ennemi_x = [ennemiX + (i*74) for i in range(nb_ennemis_x)]
+ennemi_y = [ennemiY + (j+69) for i in range(nb_ennemis_x)]
+ennemi_img = [pygame.image.load("images/enemy.png") for i in range(nb_ennemis_x)]
+"""
+
 # Bullet
 bullet_width, bullet_height = 8, 32
-speed_bullet = 6
+speed_bullet = 5
 bullet_img = []
-bullet_x = []
-bullet_y = []
+bullet_x, bullet_y  = [], []
 nb_bullet = 5
 activation_bullet = [False for x in range(nb_bullet)]
+img_bullet = pygame.image.load("images/bullet-2.png")
 
 #Création des bullet
-for x in range (nb_bullet):
-    bullet_img.append(pygame.image.load("images/bullet-2.png"))
-    bullet_x.append(0)
-    bullet_y.append(0)
+bullet_img = [img_bullet for x in range(nb_bullet)] 
+bullet_y = [0 for x in range(nb_bullet)]
+bullet_x = [0 for x in range(nb_bullet)]
 
 # FONCTIONS
 """Fonctions de mouvement"""
@@ -154,14 +142,14 @@ def détection_bordure(ennemi_x):
         return False
 
 def détection_ennemi(ennemi_x, ennemi_y, laser_x, laser_y):
-    distance = math.sqrt(pow(ennemi_x - laser_x, 2) + pow(ennemi_y - laser_y, 2)) # formule de la distance
+    distance = sqrt(pow(ennemi_x - laser_x, 2) + pow(ennemi_y - laser_y, 2)) # formule de la distance
     if distance < 35:
         return True
     else:
         return False
 
 def détection_player(player_x, player_y, bullet_x, bullet_y):
-    distance = math.sqrt(pow(player_x - bullet_x, 2) + pow(player_y - bullet_y, 2))
+    distance = sqrt(pow(player_x - bullet_x, 2) + pow(player_y - bullet_y, 2))
     if distance < 35:
         return True
     else:
@@ -178,11 +166,28 @@ while running:
                 game = True
 
     screen.blit(background, (0, 0))
+    
+    text_space_invaders = "SPACE INVADERS"
+    text_mission = "Mission : éliminer les vaisseaux ennemis !"
+    label_space_invaders = myFont_window_title.render(text_space_invaders, 1, BLANC)
+    label_mission = myFont_window_taille_1.render(text_mission, 1, BLANC)
     screen.blit(label_space_invaders, (220, 50))
     screen.blit(label_mission, (50, 150))
+    
+    text_rules = "ESPACE : tire des lasers"
+    text_rules_2 = "FLECHE GAUCHE : déplace le vaisseau vers la gauche"
+    text_rules_3 = "FLECHE DROITE : déplace le vaisseau vers la droite"
+    label_rules = myFont_window_taille_2.render(text_rules,1,BLANC)
+    label_rules_2 = myFont_window_taille_2.render(text_rules_2,1,BLANC)
+    label_rules_3 = myFont_window_taille_2.render(text_rules_3,1,BLANC)
     screen.blit(label_rules, (50, 250))
     screen.blit(label_rules_2, (50, 300))
     screen.blit(label_rules_3, (50, 350))
+    
+    text_start = "APPUYER SUR ENTREE POUR JOUER"
+    text_musique = "Chanson : The Edge of Dawn"
+    label_start = myFont_window_taille_1.render(text_start,1,BLANC)
+    label_musique = myFont_window_taille_3.render(text_musique, 1, BLANC)
     screen.blit(label_start, (75, 450))
     screen.blit(label_musique, (550, 550))
     pygame.display.update()
@@ -211,14 +216,24 @@ while running:
         player_x, player_y = coordonnées_player[0], coordonnées_player[1]
 
         #affiche le nombre de vie
+        
+        text_nb_lives = "NOMBRE DE VIE :"
+        label_nb_lives = myFont_game.render(text_nb_lives,1,BLANC)
+        
         text_lives = str(lives)
         label_lives = myFont_game.render(text_lives, 1, BLANC)
+        
         screen.blit(label_nb_lives, (500, 3)) # "NOMBRE DE VIE :"
         screen.blit(label_lives, (750, 3))    # [3, 2, 1]
 
         #affiche le score
+        text_name_score = "SCORE :"
+        label_name_score = myFont_game.render(text_name_score, 1, BLANC)
+        
+        
         text_score = str(score)
         label_score = myFont_game.render(text_score, 1, BLANC)
+        
         screen.blit(label_name_score, (15,3)) # "SCORE :"
         screen.blit(label_score, (150, 3))    # [score]
 
@@ -257,7 +272,6 @@ while running:
                     bordure = True
 
                 if collision:
-                    explosion_player = mixer.Sound("musique/explosion-player.wav")
                     explosion_player.play()
                     laser_y = 480
                     activation_laser = False
@@ -276,7 +290,7 @@ while running:
             #Mouvement - laser
             if activation_laser:
                 lancement_laser(laser_x,laser_y)
-                laser_y -= speed_laser
+                laser_y -= speed_laser 
 
             #Mouvement - bullet
             for j in range (nb_bullet):
@@ -289,7 +303,6 @@ while running:
                 if crash: #Collision - bullet/player
                     lives -= 1
                     bullet_x[j], bullet_y[j] = 0, 0
-                    explosion_ennemi = mixer.Sound("musique/explosion-ennemi.wav")
                     explosion_ennemi.play()
                     activation_bullet[j] = False
 
@@ -316,17 +329,35 @@ while running:
 
     if win: #affiche "BRAVO !"
         screen.blit(background, (0, 0))
+        
+        text_win = "BRAVO !"
+        label_win = myFont_window_title.render(text_win, 1, BLANC)
         screen.blit(label_win,(320,50))
         pygame.display.update()
-        time.sleep(3)
+        sleep(3)
         running = False
 
     elif end: # affiche "PERDU !"
         screen.blit(background, (0, 0))
+        
+        text_game_over = "PERDU !"
+        label_game_over = myFont_window_title.render(text_game_over, 1, BLANC)
         screen.blit(label_game_over, (320,50))
         pygame.display.update()
-        time.sleep(3)
+        sleep(3)
         running = False
-        
-#sys.exit()
+
+"""
+def quit_game():
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+            quit()
+
+quit_game()
+"""
+
+pygame.display.quit()
 pygame.quit()
+sys.exit()
