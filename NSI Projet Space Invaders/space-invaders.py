@@ -101,7 +101,7 @@ ennemi_img = [pygame.image.load("images/enemy.png") for i in range(nb_ennemis_x)
 
 # Bullet
 bullet_width, bullet_height = 8, 32
-speed_bullet = 5
+speed_bullet = 2
 bullet_img = []
 bullet_x, bullet_y  = [], []
 nb_bullet = 5
@@ -163,7 +163,7 @@ while running:
             running = False
 
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                game = True
+            game = True
 
     screen.blit(background, (0, 0))
     
@@ -174,7 +174,7 @@ while running:
     screen.blit(label_space_invaders, (220, 50))
     screen.blit(label_mission, (50, 150))
     
-    text_rules = "ESPACE : tire des lasers"
+    text_rules = "TAB : tire des lasers"
     text_rules_2 = "FLECHE GAUCHE : déplace le vaisseau vers la gauche"
     text_rules_3 = "FLECHE DROITE : déplace le vaisseau vers la droite"
     label_rules = myFont_window_taille_2.render(text_rules,1,BLANC)
@@ -186,7 +186,7 @@ while running:
     
     text_start = "APPUYER SUR ENTREE POUR JOUER"
     text_musique = "Chanson : The Edge of Dawn"
-    label_start = myFont_window_taille_1.render(text_start,1,BLANC)
+    label_start = myFont_window_taille_1.render(text_start, 1, BLANC)
     label_musique = myFont_window_taille_3.render(text_musique, 1, BLANC)
     screen.blit(label_start, (75, 450))
     screen.blit(label_musique, (550, 550))
@@ -202,12 +202,14 @@ while running:
 
         # Déplacement du vaisseau / Activation du laser
         if event.type == pygame.KEYDOWN:
+            
             if event.key == pygame.K_LEFT:
                 player_x -= speed_player
-            if event.key == pygame.K_RIGHT:
+
+            elif event.key == pygame.K_RIGHT:
                 player_x += speed_player
 
-            if event.key == pygame.K_SPACE and activation_laser == False:
+            elif event.key == pygame.K_TAB and not(activation_laser):
                 activation_laser = True
                 laser_x = player_x
 
@@ -216,7 +218,6 @@ while running:
         player_x, player_y = coordonnées_player[0], coordonnées_player[1]
 
         #affiche le nombre de vie
-        
         text_nb_lives = "NOMBRE DE VIE :"
         label_nb_lives = myFont_game.render(text_nb_lives,1,BLANC)
         
@@ -230,7 +231,6 @@ while running:
         text_name_score = "SCORE :"
         label_name_score = myFont_game.render(text_name_score, 1, BLANC)
         
-        
         text_score = str(score)
         label_score = myFont_game.render(text_score, 1, BLANC)
         
@@ -239,11 +239,11 @@ while running:
 
         #Fait accélérer la vitesse - bullet
         if score > 10:
-            speed_bullet = 7
+            speed_bullet = 5
         if score > 15:
-            speed_bullet = 8
+            speed_bullet = 7
 
-        if end == False:
+        if not(end):
 
             # Mouvement de l'ennemi + Collision ennemi-laser
             for i in range(nb_ennemis):
@@ -259,7 +259,7 @@ while running:
                     if test_bullet < 10 and (False in activation_bullet):
                             stop = 0
                             for x in range(nb_bullet):
-                                if activation_bullet[x] == False and stop == 0:
+                                if not(activation_bullet[x]) and stop == 0:
                                     activation_bullet[x] = True
                                     bullet_x[x] = ennemi_x[i]
                                     bullet_y[x] = ennemi_y[i]
